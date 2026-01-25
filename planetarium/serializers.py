@@ -25,6 +25,17 @@ class ShowSerializer(serializers.ModelSerializer):
 
 
 class ShowListSerializer(serializers.ModelSerializer):
+    themes = serializers.StringRelatedField(many=True)
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "title",
+            "description",
+            "themes",
+        )
+
+class ShowRetrieveSerializer(serializers.ModelSerializer):
     themes = ThemeSerializer(many=True, read_only=True)
     class Meta:
         model = Show
