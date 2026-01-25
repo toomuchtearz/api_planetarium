@@ -1,5 +1,7 @@
 from django.db import models
 
+from api_planetarium import settings
+
 
 class Theme(models.Model):
     name = models.CharField(max_length=64, unique=True)
@@ -50,6 +52,11 @@ class Session(models.Model):
 
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="orders"
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -63,4 +70,3 @@ class Ticket(models.Model):
     seat = models.IntegerField()
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="tickets")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
-
