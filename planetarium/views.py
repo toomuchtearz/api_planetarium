@@ -1,7 +1,8 @@
 from rest_framework import viewsets
 
-from planetarium.models import Theme, Show
-from planetarium.serializers import ThemeSerializer, ShowSerializer, ShowListSerializer, ShowRetrieveSerializer
+from planetarium.models import Theme, Show, PlanetariumDome
+from planetarium.serializers import ThemeSerializer, ShowSerializer, ShowListSerializer, ShowRetrieveSerializer, \
+    PlanetariumDomeSerializer
 
 
 class ThemeViewSet(viewsets.ModelViewSet):
@@ -27,3 +28,8 @@ class ShowViewSet(viewsets.ModelViewSet):
                 "themes",
             )
         return queryset
+
+
+class PlanetariumDomeViewSet(viewsets.ModelViewSet):
+    queryset = PlanetariumDome.objects.all()
+    serializer_class = PlanetariumDomeSerializer
