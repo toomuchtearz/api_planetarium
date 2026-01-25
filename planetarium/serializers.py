@@ -57,6 +57,7 @@ class PlanetariumDomeSerializer(serializers.ModelSerializer):
             "name",
             "rows",
             "seats_in_row",
+            "capacity",
         )
 
 
@@ -70,6 +71,12 @@ class SessionSerializer(serializers.ModelSerializer):
             "dome",
             "show_time"
         )
+
+
+class SessionRetrieveSerializer(SessionSerializer):
+    show = ShowListSerializer(read_only=True)
+    dome = PlanetariumDomeSerializer(read_only=True)
+
 
 class SessionListSerializer(serializers.ModelSerializer):
     show_title = serializers.StringRelatedField(source="show")
