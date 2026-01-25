@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 
-from planetarium.models import Theme, Show, PlanetariumDome
+from planetarium.models import Theme, Show, PlanetariumDome, Session
 from planetarium.serializers import ThemeSerializer, ShowSerializer, ShowListSerializer, ShowRetrieveSerializer, \
-    PlanetariumDomeSerializer
+    PlanetariumDomeSerializer, SessionSerializer, SessionListSerializer
 
 
 class ThemeViewSet(viewsets.ModelViewSet):
@@ -33,3 +33,23 @@ class ShowViewSet(viewsets.ModelViewSet):
 class PlanetariumDomeViewSet(viewsets.ModelViewSet):
     queryset = PlanetariumDome.objects.all()
     serializer_class = PlanetariumDomeSerializer
+
+
+class SessionViewSet(viewsets.ModelViewSet):
+    queryset = Session.objects.all()
+    serializer_class = SessionSerializer
+
+    def get_serializer_class(self):
+        serializer = self.serializer_class
+        if self.action == "list":
+            serializer = SessionListSerializer
+
+        return serializer
+
+    def get_queryset(self):
+        queryset = self.queryset
+        if self.action == "list":
+            queryset = queryset.select_related(
+                "dome", "show"
+            )
+        return queryset
