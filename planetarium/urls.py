@@ -3,6 +3,8 @@ from rest_framework.routers import DefaultRouter
 
 from planetarium.views import ThemeViewSet, ShowViewSet, PlanetariumDomeViewSet, SessionViewSet, OrderViewSet
 
+app_name = "planetarium"
+
 router = DefaultRouter()
 router.register("themes", ThemeViewSet,)
 router.register("shows", ShowViewSet,)
