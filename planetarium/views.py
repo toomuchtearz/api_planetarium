@@ -2,7 +2,7 @@ from rest_framework import viewsets
 
 from planetarium.models import Theme, Show, PlanetariumDome, Session
 from planetarium.serializers import ThemeSerializer, ShowSerializer, ShowListSerializer, ShowRetrieveSerializer, \
-    PlanetariumDomeSerializer, SessionSerializer, SessionListSerializer
+    PlanetariumDomeSerializer, SessionSerializer, SessionListSerializer, SessionRetrieveSerializer
 
 
 class ThemeViewSet(viewsets.ModelViewSet):
@@ -43,6 +43,8 @@ class SessionViewSet(viewsets.ModelViewSet):
         serializer = self.serializer_class
         if self.action == "list":
             serializer = SessionListSerializer
+        elif self.action == "retrieve":
+            serializer = SessionRetrieveSerializer
 
         return serializer
 
