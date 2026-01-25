@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 
 from api_planetarium import settings
 
@@ -70,3 +71,14 @@ class Ticket(models.Model):
     seat = models.IntegerField()
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="tickets")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(
+                fields=["row", "seat", "session"],
+                name="unique_row_seat_session_for_ticket"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"Ticket for {self.session}"
