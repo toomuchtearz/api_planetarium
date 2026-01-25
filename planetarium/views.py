@@ -14,7 +14,7 @@ from planetarium.serializers import (
     SessionListSerializer,
     SessionRetrieveSerializer,
 
-    OrderSerializer
+    OrderCreateSerializer, OrderListSerializer
 )
 
 
@@ -72,4 +72,26 @@ class SessionViewSet(viewsets.ModelViewSet):
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
-    serializer_class = OrderSerializer
+    serializer_class = OrderListSerializer
+
+    def get_queryset(self):
+        queryset = self.queryset
+        queryset = queryset.filter(user=self.request.user)
+
+        if self.action == "list":
+            queryset = queryset.prefetch_related(
+                "tickets",
+                "tickets__session__show",
+                "tickets__session__dome",
+            )
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_serializer_class(self):
+        serializer = self.serializer_class
+        if self.action == "create":
+            serializer = OrderCreateSerializer
+
+        return serializer
