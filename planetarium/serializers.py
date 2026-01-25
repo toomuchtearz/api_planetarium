@@ -94,8 +94,8 @@ class SessionListSerializer(serializers.ModelSerializer):
             "show_time"
         )
 
-class TicketCreateSerializer(serializers.ModelSerializer):
 
+class TicketCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = (
@@ -105,16 +105,34 @@ class TicketCreateSerializer(serializers.ModelSerializer):
         )
 
 
-class OrderSerializer(serializers.ModelSerializer):
-    tickets = TicketCreateSerializer(many=True, read_only=False)
+class TicketListSerializer(serializers.ModelSerializer):
+    show_title = serializers.StringRelatedField(source="session.show")
+    dome = serializers.StringRelatedField(source="session.dome")
+    show_time = serializers.DateTimeField(source="session.show_time")
+
+    class Meta:
+        model = Ticket
+        fields = (
+            "row",
+            "seat",
+            "show_title",
+            "dome",
+            "show_time",
+        )
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    tickets = TicketCreateSerializer(
+        many=True,
+        read_only=False,
+        allow_empty=False
+    )
 
     class Meta:
         model = Order
         fields = (
             "id",
-            "user",
             "tickets",
-            "created_at"
+            "created_at",
         )
 
     def create(self, validated_data):
@@ -129,3 +147,15 @@ class OrderSerializer(serializers.ModelSerializer):
                     **ticket
                 )
             return new_order
+
+
+class OrderListSerializer(serializers.ModelSerializer):
+    tickets = TicketListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = (
+            "id",
+            "tickets",
+            "created_at",
+        )
