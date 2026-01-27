@@ -82,3 +82,40 @@ class Ticket(models.Model):
 
     def __str__(self) -> str:
         return f"Ticket for {self.session}"
+
+    @staticmethod
+    def validate_row_and_seat(
+            row: int,
+            num_rows: int,
+            seat: int,
+            num_seats: int,
+            raised_error,
+    ):
+        if not (1 <= row <= num_rows):
+            raise raised_error(
+                {
+                    "row": f"row must be in range [1, {num_rows}]"
+                }
+            )
+        elif not (1 <= seat <= num_seats):
+            raise raised_error(
+                {
+                    "seat": f"seat must be in range [1, {num_seats}]"
+                }
+            )
+    def clean(self):
+        self.validate_row_and_seat(
+            row=self.row,
+            num_rows=self.session.dome.rows,
+            seat=self.seat,
+            num_seats=self.session.dome.seats_in_row,
+            raised_error=ValueError,
+        )
+
+    def save(
+            self,
+            *args,
+            **kwargs,
+    ):
+        self.full_clean()
+        return super().save()
