@@ -1,20 +1,19 @@
+from django.db.models import Prefetch
+from django.utils import timezone
 from rest_framework import viewsets
 
-from planetarium.models import Theme, Show, PlanetariumDome, Session, Order
+from planetarium.models import Theme, Show, PlanetariumDome, Session, Order, Ticket
 from planetarium.serializers import (
     ThemeSerializer,
-
     ShowSerializer,
     ShowListSerializer,
     ShowRetrieveSerializer,
-
     PlanetariumDomeSerializer,
-
     SessionSerializer,
     SessionListSerializer,
     SessionRetrieveSerializer,
-
-    OrderCreateSerializer, OrderListSerializer
+    OrderCreateSerializer,
+    OrderListSerializer,
 )
 
 
@@ -36,9 +35,20 @@ class ShowViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-        if self.action in ("list", "retrieve"):
+        if self.action == "list":
+            queryset = queryset.prefetch_related(
+                "themes"
+            )
+        if self.action == "retrieve":
             queryset = queryset.prefetch_related(
                 "themes",
+                Prefetch(
+                    "sessions",
+                    queryset=Session.objects.filter(
+                        show_time__gte=timezone.now()
+                    ).select_related("dome"),
+                    to_attr="future_sessions"
+                )
             )
         return queryset
 
@@ -64,9 +74,7 @@ class SessionViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
         if self.action == "list":
-            queryset = queryset.select_related(
-                "dome", "show"
-            )
+            queryset = queryset.select_related("dome", "show")
         return queryset
 
 
@@ -80,9 +88,12 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         if self.action == "list":
             queryset = queryset.prefetch_related(
-                "tickets",
-                "tickets__session__show",
-                "tickets__session__dome",
+                Prefetch(
+                    "tickets",
+                    queryset=Ticket.objects.select_related(
+                        "session__show", "session__dome"
+                    ),
+                )
             )
         return queryset
 
