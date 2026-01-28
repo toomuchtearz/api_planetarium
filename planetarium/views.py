@@ -140,7 +140,7 @@ class SessionViewSet(viewsets.ModelViewSet):
         if domes_ids:
             domes_ids = str_ids_to_int(str_ids=domes_ids)
             queryset = queryset.filter(
-                show_id__in=domes_ids
+                dome_id__in=domes_ids
             )
 
         if date_str:
