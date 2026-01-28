@@ -2,7 +2,9 @@ from datetime import datetime
 
 from django.db.models import Prefetch, F, Count
 from django.utils import timezone
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from planetarium.models import Theme, Show, PlanetariumDome, Session, Order, Ticket
 from planetarium.serializers import (
@@ -15,7 +17,7 @@ from planetarium.serializers import (
     OrderCreateSerializer,
     OrderListSerializer,
     ThemeRetrieveSerializer,
-    ShowCreateSerializer, DomeRetrieveSerializer, SessionCreateSerializer,
+    ShowCreateSerializer, DomeRetrieveSerializer, SessionCreateSerializer, ShowImageSerializer,
 )
 
 
@@ -48,6 +50,8 @@ class ShowViewSet(viewsets.ModelViewSet):
             serializer = ShowListSerializer
         elif self.action == "retrieve":
             serializer = ShowRetrieveSerializer
+        elif self.action == "upload_image":
+            serializer = ShowImageSerializer
         return serializer
 
     def get_queryset(self):
@@ -86,6 +90,18 @@ class ShowViewSet(viewsets.ModelViewSet):
 
         return queryset.distinct()
 
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="upload-image",
+    )
+    def upload_image(self, request, pk=None):
+        show = self.get_object()
+        serializer = self.get_serializer(show, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 class PlanetariumDomeViewSet(viewsets.ModelViewSet):
     queryset = PlanetariumDome.objects.all()
@@ -160,7 +176,11 @@ class SessionViewSet(viewsets.ModelViewSet):
                 pass
 
         if self.action in ("list", "retrieve",):
-            queryset = queryset.select_related("dome", "show").annotate(
+            queryset = queryset.select_related(
+                "dome", "show"
+            ).prefetch_related(
+                "show__themes"
+            ).annotate(
                 seats_left=(
                     (F("dome__rows") * F("dome__seats_in_row")) - Count("tickets")
                 )
