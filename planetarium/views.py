@@ -93,6 +93,12 @@ class PlanetariumDomeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
+
+        name = self.request.query_params.get("name")
+
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+
         if self.action == "retrieve":
             queryset = queryset.prefetch_related(
                 Prefetch(
