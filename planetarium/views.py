@@ -5,15 +5,15 @@ from rest_framework import viewsets
 from planetarium.models import Theme, Show, PlanetariumDome, Session, Order, Ticket
 from planetarium.serializers import (
     ThemeSerializer,
-    ShowSerializer,
     ShowListSerializer,
     ShowRetrieveSerializer,
-    PlanetariumDomeSerializer,
-    SessionSerializer,
+    DomeSerializer,
     SessionListSerializer,
     SessionRetrieveSerializer,
     OrderCreateSerializer,
     OrderListSerializer,
+    ThemeRetrieveSerializer,
+    ShowCreateSerializer, DomeRetrieveSerializer, SessionCreateSerializer,
 )
 
 
@@ -21,10 +21,17 @@ class ThemeViewSet(viewsets.ModelViewSet):
     queryset = Theme.objects.all()
     serializer_class = ThemeSerializer
 
+    def get_serializer_class(self):
+        serializer = self.serializer_class
+        if self.action == "retrieve":
+            serializer = ThemeRetrieveSerializer
+
+        return serializer
+
 
 class ShowViewSet(viewsets.ModelViewSet):
     queryset = Show.objects.all()
-    serializer_class = ShowSerializer
+    serializer_class = ShowCreateSerializer
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -55,18 +62,40 @@ class ShowViewSet(viewsets.ModelViewSet):
 
 class PlanetariumDomeViewSet(viewsets.ModelViewSet):
     queryset = PlanetariumDome.objects.all()
-    serializer_class = PlanetariumDomeSerializer
+    serializer_class = DomeSerializer
+
+    def get_queryset(self):
+        queryset = self.queryset
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    "sessions",
+                    queryset=Session.objects.filter(
+                        show_time__gte=timezone.now()
+                    ).select_related("show"),
+                    to_attr="future_sessions"
+                )
+            )
+
+        return queryset
+
+    def get_serializer_class(self):
+        serializer = self.serializer_class
+        if self.action == "retrieve":
+            serializer = DomeRetrieveSerializer
+
+        return serializer
 
 
 class SessionViewSet(viewsets.ModelViewSet):
     queryset = Session.objects.all()
-    serializer_class = SessionSerializer
+    serializer_class = SessionCreateSerializer
 
     def get_serializer_class(self):
         serializer = self.serializer_class
         if self.action == "list":
             serializer = SessionListSerializer
-        elif self.action == "retrieve":
+        if self.action == "retrieve":
             serializer = SessionRetrieveSerializer
 
         return serializer
