@@ -122,6 +122,17 @@ class SessionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
+
+        date_str = self.request.query_params.get("date")
+        if date_str:
+            date = datetime.strptime(
+                date_str,
+                "%Y-%m-%d"
+            )
+            queryset = queryset.filter(
+                show_time__date=date
+            )
+
         if self.action in ("list", "retrieve",):
             queryset = queryset.select_related("dome", "show").annotate(
                 seats_left=(
@@ -129,7 +140,7 @@ class SessionViewSet(viewsets.ModelViewSet):
                 )
             )
 
-        return queryset
+        return queryset.distinct()
 
 
 class OrderViewSet(viewsets.ModelViewSet):
