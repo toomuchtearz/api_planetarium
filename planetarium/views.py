@@ -20,7 +20,10 @@ from planetarium.serializers import (
 
 
 def str_ids_to_int(str_ids):
-    return [int(str_id) for str_id in str_ids.split(",")]
+    try:
+        return [int(str_id) for str_id in str_ids.split(",")]
+    except ValueError:
+        return []
 
 
 class ThemeViewSet(viewsets.ModelViewSet):
@@ -144,13 +147,11 @@ class SessionViewSet(viewsets.ModelViewSet):
             )
 
         if date_str:
-            date = datetime.strptime(
-                date_str,
-                "%Y-%m-%d"
-            )
-            queryset = queryset.filter(
-                show_time__date=date
-            )
+            try:
+                date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                queryset = queryset.filter(show_time__date=date)
+            except ValueError:
+                pass
 
         if self.action in ("list", "retrieve",):
             queryset = queryset.select_related("dome", "show").annotate(
