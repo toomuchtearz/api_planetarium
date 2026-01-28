@@ -5,17 +5,7 @@ from rest_framework import serializers
 from planetarium.models import Theme, Show, PlanetariumDome, Session, Order, Ticket
 
 
-class ThemeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Theme
-        fields = (
-            "id",
-            "name",
-        )
-
-
-class ShowSerializer(serializers.ModelSerializer):
+class ShowCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Show
         fields = (
@@ -39,7 +29,62 @@ class ShowListSerializer(serializers.ModelSerializer):
         )
 
 
-class PlanetariumDomeSerializer(serializers.ModelSerializer):
+class ThemeShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "title",
+            "description",
+        )
+
+
+class ShowSessionSerializer(serializers.ModelSerializer):
+    dome_name = serializers.StringRelatedField(source="dome")
+    dome_capacity = serializers.IntegerField(source="dome.capacity")
+
+    class Meta:
+        model = Session
+        fields = ("id", "dome_name", "dome_capacity", "show_time")
+
+
+class ThemeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Theme
+        fields = (
+            "id",
+            "name",
+        )
+
+
+class ShowRetrieveSerializer(serializers.ModelSerializer):
+    themes = ThemeSerializer(many=True, read_only=True)
+    future_sessions = ShowSessionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "title",
+            "description",
+            "themes",
+            "future_sessions",
+        )
+
+class ThemeRetrieveSerializer(serializers.ModelSerializer):
+    shows = ThemeShowSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Theme
+        fields = (
+            "id",
+            "name",
+            "shows",
+        )
+
+
+class DomeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PlanetariumDome
@@ -52,16 +97,25 @@ class PlanetariumDomeSerializer(serializers.ModelSerializer):
         )
 
 
-class SessionSerializer(serializers.ModelSerializer):
+class SessionRetrieveSerializer(serializers.ModelSerializer):
+    show = ShowListSerializer(read_only=True)
+    dome = DomeSerializer(read_only=True)
 
     class Meta:
         model = Session
         fields = ("id", "show", "dome", "show_time")
 
 
-class SessionRetrieveSerializer(SessionSerializer):
-    show = ShowListSerializer(read_only=True)
-    dome = PlanetariumDomeSerializer(read_only=True)
+class SessionCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Session
+        fields = (
+            "id",
+            "show",
+            "dome",
+            "show_time",
+        )
 
 
 class SessionListSerializer(serializers.ModelSerializer):
@@ -72,6 +126,36 @@ class SessionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Session
         fields = ("id", "show_title", "dome_name", "dome_capacity", "show_time")
+
+
+class DomeSessionSerializer(serializers.ModelSerializer):
+    show_title = serializers.StringRelatedField(
+        source="show.title"
+    )
+    class Meta:
+        model = Session
+        fields = (
+            "id",
+            "show_title",
+            "show_time"
+        )
+
+
+class DomeRetrieveSerializer(serializers.ModelSerializer):
+    future_sessions = DomeSessionSerializer(
+        many=True, read_only=True
+    )
+
+    class Meta:
+        model = PlanetariumDome
+        fields = (
+            "id",
+            "name",
+            "rows",
+            "seats_in_row",
+            "capacity",
+            "future_sessions",
+        )
 
 
 class TicketCreateSerializer(serializers.ModelSerializer):
@@ -161,28 +245,4 @@ class OrderListSerializer(serializers.ModelSerializer):
             "id",
             "tickets",
             "created_at",
-        )
-
-
-class SessionInlineSerializer(serializers.ModelSerializer):
-    dome_name = serializers.StringRelatedField(source="dome")
-    dome_capacity = serializers.IntegerField(source="dome.capacity")
-
-    class Meta:
-        model = Session
-        fields = ("id", "dome_name", "dome_capacity", "show_time")
-
-
-class ShowRetrieveSerializer(serializers.ModelSerializer):
-    themes = ThemeSerializer(many=True, read_only=True)
-    future_sessions = SessionInlineSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Show
-        fields = (
-            "id",
-            "title",
-            "description",
-            "themes",
-            "future_sessions",
         )
