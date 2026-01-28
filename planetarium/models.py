@@ -1,7 +1,19 @@
+import os
+import uuid
+
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
+from django.utils.text import slugify
 
 from api_planetarium import settings
+
+
+def create_custom_path(instance, filename):
+   _, extension = os.path.splitext(filename)
+   return os.path.join(
+       "uploads/images/",
+       f"{slugify(instance.title)}-{uuid.uuid4()}{extension}"
+   )
 
 
 class Theme(models.Model):
@@ -15,6 +27,7 @@ class Show(models.Model):
     title = models.CharField(max_length=64, unique=True)
     description = models.TextField()
     themes = models.ManyToManyField(Theme, related_name="shows")
+    image = models.ImageField(null=True, upload_to=create_custom_path)
 
     def __str__(self) -> str:
         return self.title
