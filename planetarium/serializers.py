@@ -29,6 +29,7 @@ class ShowListSerializer(serializers.ModelSerializer):
             "themes",
         )
 
+
 class ShowImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Show
@@ -82,6 +83,7 @@ class ShowRetrieveSerializer(serializers.ModelSerializer):
             "future_sessions",
         )
 
+
 class ThemeRetrieveSerializer(serializers.ModelSerializer):
     associated_shows = ThemeShowSerializer(many=True, read_only=True, source="shows")
 
@@ -125,7 +127,7 @@ class SessionRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Session
-        fields = ("id","show_time", "show", "dome", "seats_left", "taken_seats")
+        fields = ("id", "show_time", "show", "dome", "seats_left", "taken_seats")
 
 
 class SessionCreateSerializer(serializers.ModelSerializer):
@@ -154,27 +156,20 @@ class SessionListSerializer(serializers.ModelSerializer):
             "dome_name",
             "dome_capacity",
             "seats_left",
-            "show_time"
+            "show_time",
         )
 
 
 class DomeSessionSerializer(serializers.ModelSerializer):
-    show_title = serializers.StringRelatedField(
-        source="show.title"
-    )
+    show_title = serializers.StringRelatedField(source="show.title")
+
     class Meta:
         model = Session
-        fields = (
-            "id",
-            "show_title",
-            "show_time"
-        )
+        fields = ("id", "show_title", "show_time")
 
 
 class DomeRetrieveSerializer(serializers.ModelSerializer):
-    future_sessions = DomeSessionSerializer(
-        many=True, read_only=True
-    )
+    future_sessions = DomeSessionSerializer(many=True, read_only=True)
 
     class Meta:
         model = PlanetariumDome

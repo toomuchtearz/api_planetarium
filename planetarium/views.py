@@ -17,7 +17,10 @@ from planetarium.serializers import (
     OrderCreateSerializer,
     OrderListSerializer,
     ThemeRetrieveSerializer,
-    ShowCreateSerializer, DomeRetrieveSerializer, SessionCreateSerializer, ShowImageSerializer,
+    ShowCreateSerializer,
+    DomeRetrieveSerializer,
+    SessionCreateSerializer,
+    ShowImageSerializer,
 )
 
 
@@ -62,19 +65,13 @@ class ShowViewSet(viewsets.ModelViewSet):
 
         if themes_id:
             themes_ids = str_ids_to_int(str_ids=themes_id)
-            queryset = queryset.filter(
-                themes__id__in=themes_ids
-            )
+            queryset = queryset.filter(themes__id__in=themes_ids)
 
         if title:
-            queryset = queryset.filter(
-                title__icontains=title
-            )
+            queryset = queryset.filter(title__icontains=title)
 
         if self.action == "list":
-            queryset = queryset.prefetch_related(
-                "themes"
-            )
+            queryset = queryset.prefetch_related("themes")
 
         elif self.action == "retrieve":
             queryset = queryset.prefetch_related(
@@ -84,8 +81,8 @@ class ShowViewSet(viewsets.ModelViewSet):
                     queryset=Session.objects.filter(
                         show_time__gte=timezone.now()
                     ).select_related("dome"),
-                    to_attr="future_sessions"
-                )
+                    to_attr="future_sessions",
+                ),
             )
 
         return queryset.distinct()
@@ -102,6 +99,7 @@ class ShowViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+
 
 class PlanetariumDomeViewSet(viewsets.ModelViewSet):
     queryset = PlanetariumDome.objects.all()
@@ -122,7 +120,7 @@ class PlanetariumDomeViewSet(viewsets.ModelViewSet):
                     queryset=Session.objects.filter(
                         show_time__gte=timezone.now()
                     ).select_related("show"),
-                    to_attr="future_sessions"
+                    to_attr="future_sessions",
                 )
             )
 
@@ -154,19 +152,15 @@ class SessionViewSet(viewsets.ModelViewSet):
 
         date_str = self.request.query_params.get("date")
         shows_ids = self.request.query_params.get("shows")
-        domes_ids =self.request.query_params.get("domes")
+        domes_ids = self.request.query_params.get("domes")
 
         if shows_ids:
             shows_id = str_ids_to_int(str_ids=shows_ids)
-            queryset = queryset.filter(
-                show_id__in=shows_id
-            )
+            queryset = queryset.filter(show_id__in=shows_id)
 
         if domes_ids:
             domes_ids = str_ids_to_int(str_ids=domes_ids)
-            queryset = queryset.filter(
-                dome_id__in=domes_ids
-            )
+            queryset = queryset.filter(dome_id__in=domes_ids)
 
         if date_str:
             try:
@@ -175,14 +169,17 @@ class SessionViewSet(viewsets.ModelViewSet):
             except ValueError:
                 pass
 
-        if self.action in ("list", "retrieve",):
-            queryset = queryset.select_related(
-                "dome", "show"
-            ).prefetch_related(
-                "show__themes"
-            ).annotate(
-                seats_left=(
-                    (F("dome__rows") * F("dome__seats_in_row")) - Count("tickets")
+        if self.action in (
+            "list",
+            "retrieve",
+        ):
+            queryset = (
+                queryset.select_related("dome", "show")
+                .prefetch_related("show__themes")
+                .annotate(
+                    seats_left=(
+                        (F("dome__rows") * F("dome__seats_in_row")) - Count("tickets")
+                    )
                 )
             )
 

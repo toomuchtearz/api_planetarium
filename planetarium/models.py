@@ -9,11 +9,10 @@ from api_planetarium import settings
 
 
 def create_custom_path(instance, filename):
-   _, extension = os.path.splitext(filename)
-   return os.path.join(
-       "uploads/images/",
-       f"{slugify(instance.title)}-{uuid.uuid4()}{extension}"
-   )
+    _, extension = os.path.splitext(filename)
+    return os.path.join(
+        "uploads/images/", f"{slugify(instance.title)}-{uuid.uuid4()}{extension}"
+    )
 
 
 class Theme(models.Model):
@@ -67,9 +66,7 @@ class Session(models.Model):
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="orders"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
     )
 
     class Meta:
@@ -82,14 +79,16 @@ class Order(models.Model):
 class Ticket(models.Model):
     row = models.IntegerField()
     seat = models.IntegerField()
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name="tickets")
+    session = models.ForeignKey(
+        Session, on_delete=models.CASCADE, related_name="tickets"
+    )
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
 
     class Meta:
         constraints = [
             UniqueConstraint(
                 fields=["row", "seat", "session"],
-                name="unique_row_seat_session_for_ticket"
+                name="unique_row_seat_session_for_ticket",
             )
         ]
 
@@ -98,24 +97,17 @@ class Ticket(models.Model):
 
     @staticmethod
     def validate_row_and_seat(
-            row: int,
-            num_rows: int,
-            seat: int,
-            num_seats: int,
-            raised_error,
+        row: int,
+        num_rows: int,
+        seat: int,
+        num_seats: int,
+        raised_error,
     ):
         if not (1 <= row <= num_rows):
-            raise raised_error(
-                {
-                    "row": f"row must be in range [1, {num_rows}]"
-                }
-            )
+            raise raised_error({"row": f"row must be in range [1, {num_rows}]"})
         elif not (1 <= seat <= num_seats):
-            raise raised_error(
-                {
-                    "seat": f"seat must be in range [1, {num_seats}]"
-                }
-            )
+            raise raised_error({"seat": f"seat must be in range [1, {num_seats}]"})
+
     def clean(self):
         self.validate_row_and_seat(
             row=self.row,
@@ -126,9 +118,9 @@ class Ticket(models.Model):
         )
 
     def save(
-            self,
-            *args,
-            **kwargs,
+        self,
+        *args,
+        **kwargs,
     ):
         self.full_clean()
         return super().save()

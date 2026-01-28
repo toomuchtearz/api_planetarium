@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/6.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
+
 from datetime import timedelta
 from pathlib import Path
 
@@ -37,7 +38,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "planetarium",
     "user",
     "rest_framework",
@@ -136,13 +136,13 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "planetarium.permissions.IsAdminOrIfAuthenticatedReadOnly",
-    )
+    ),
 }
 
 SIMPLE_JWT = {
-   "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),
-   "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-   "ROTATE_REFRESH_TOKENS": True
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
 }
 
 MEDIA_ROOT = BASE_DIR / "media"
