@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db.models import Prefetch, F, Count
 from django.utils import timezone
 from rest_framework import viewsets
@@ -34,19 +36,36 @@ class ShowViewSet(viewsets.ModelViewSet):
     serializer_class = ShowCreateSerializer
 
     def get_serializer_class(self):
+        serializer = self.serializer_class
         if self.action == "list":
-            return ShowListSerializer
+            serializer = ShowListSerializer
         elif self.action == "retrieve":
-            return ShowRetrieveSerializer
-        return self.serializer_class
+            serializer = ShowRetrieveSerializer
+        return serializer
 
     def get_queryset(self):
         queryset = self.queryset
+
+        themes = self.request.query_params.get("themes")
+        title = self.request.query_params.get("title")
+
+        if themes:
+            themes_ids = [int(theme_id) for theme_id in themes.split(",")]
+            queryset = queryset.filter(
+                themes__id__in=themes_ids
+            )
+
+        if title:
+            queryset = queryset.filter(
+                title__icontains=title
+            )
+
         if self.action == "list":
             queryset = queryset.prefetch_related(
                 "themes"
             )
-        if self.action == "retrieve":
+
+        elif self.action == "retrieve":
             queryset = queryset.prefetch_related(
                 "themes",
                 Prefetch(
@@ -57,7 +76,8 @@ class ShowViewSet(viewsets.ModelViewSet):
                     to_attr="future_sessions"
                 )
             )
-        return queryset
+
+        return queryset.distinct()
 
 
 class PlanetariumDomeViewSet(viewsets.ModelViewSet):
