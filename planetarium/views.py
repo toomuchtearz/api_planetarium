@@ -19,6 +19,10 @@ from planetarium.serializers import (
 )
 
 
+def str_ids_to_int(str_ids):
+    return [int(str_id) for str_id in str_ids.split(",")]
+
+
 class ThemeViewSet(viewsets.ModelViewSet):
     queryset = Theme.objects.all()
     serializer_class = ThemeSerializer
@@ -46,11 +50,11 @@ class ShowViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = self.queryset
 
-        themes = self.request.query_params.get("themes")
+        themes_id = self.request.query_params.get("themes")
         title = self.request.query_params.get("title")
 
-        if themes:
-            themes_ids = [int(theme_id) for theme_id in themes.split(",")]
+        if themes_id:
+            themes_ids = str_ids_to_int(str_ids=themes_id)
             queryset = queryset.filter(
                 themes__id__in=themes_ids
             )
@@ -124,6 +128,21 @@ class SessionViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
 
         date_str = self.request.query_params.get("date")
+        shows_ids = self.request.query_params.get("shows")
+        domes_ids =self.request.query_params.get("domes")
+
+        if shows_ids:
+            shows_id = str_ids_to_int(str_ids=shows_ids)
+            queryset = queryset.filter(
+                show_id__in=shows_id
+            )
+
+        if domes_ids:
+            domes_ids = str_ids_to_int(str_ids=domes_ids)
+            queryset = queryset.filter(
+                show_id__in=domes_ids
+            )
+
         if date_str:
             date = datetime.strptime(
                 date_str,
