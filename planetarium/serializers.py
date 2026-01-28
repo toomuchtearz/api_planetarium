@@ -73,14 +73,14 @@ class ShowRetrieveSerializer(serializers.ModelSerializer):
         )
 
 class ThemeRetrieveSerializer(serializers.ModelSerializer):
-    shows = ThemeShowSerializer(many=True, read_only=True)
+    associated_shows = ThemeShowSerializer(many=True, read_only=True, source="shows")
 
     class Meta:
         model = Theme
         fields = (
             "id",
             "name",
-            "shows",
+            "associated_shows",
         )
 
 
@@ -100,10 +100,11 @@ class DomeSerializer(serializers.ModelSerializer):
 class SessionRetrieveSerializer(serializers.ModelSerializer):
     show = ShowListSerializer(read_only=True)
     dome = DomeSerializer(read_only=True)
+    seats_left = serializers.IntegerField()
 
     class Meta:
         model = Session
-        fields = ("id", "show", "dome", "show_time")
+        fields = ("id", "show", "dome", "seats_left", "show_time")
 
 
 class SessionCreateSerializer(serializers.ModelSerializer):
@@ -122,10 +123,18 @@ class SessionListSerializer(serializers.ModelSerializer):
     show_title = serializers.StringRelatedField(source="show")
     dome_name = serializers.StringRelatedField(source="dome")
     dome_capacity = serializers.IntegerField(source="dome.capacity")
+    seats_left = serializers.IntegerField()
 
     class Meta:
         model = Session
-        fields = ("id", "show_title", "dome_name", "dome_capacity", "show_time")
+        fields = (
+            "id",
+            "show_title",
+            "dome_name",
+            "dome_capacity",
+            "seats_left",
+            "show_time"
+        )
 
 
 class DomeSessionSerializer(serializers.ModelSerializer):

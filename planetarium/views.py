@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Prefetch, F, Count
 from django.utils import timezone
 from rest_framework import viewsets
 
@@ -102,8 +102,13 @@ class SessionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset
-        if self.action == "list":
-            queryset = queryset.select_related("dome", "show")
+        if self.action in ("list", "retrieve",):
+            queryset = queryset.select_related("dome", "show").annotate(
+                seats_left=(
+                    (F("dome__rows") * F("dome__seats_in_row")) - Count("tickets")
+                )
+            )
+
         return queryset
 
 
