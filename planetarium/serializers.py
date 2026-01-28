@@ -97,14 +97,25 @@ class DomeSerializer(serializers.ModelSerializer):
         )
 
 
+class SessionTicketSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ticket
+        fields = (
+            "row",
+            "seat",
+        )
+
+
 class SessionRetrieveSerializer(serializers.ModelSerializer):
     show = ShowListSerializer(read_only=True)
     dome = DomeSerializer(read_only=True)
     seats_left = serializers.IntegerField()
+    taken_seats = SessionTicketSerializer(many=True, read_only=True, source="tickets")
 
     class Meta:
         model = Session
-        fields = ("id", "show", "dome", "seats_left", "show_time")
+        fields = ("id","show_time", "show", "dome", "seats_left", "taken_seats")
 
 
 class SessionCreateSerializer(serializers.ModelSerializer):
