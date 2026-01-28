@@ -170,6 +170,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         queryset = self.queryset
         queryset = queryset.filter(user=self.request.user)
 
+        creation_date_str = self.request.query_params.get("creation_date")
+
+        if creation_date_str:
+            try:
+                creation_date = datetime.strptime(creation_date_str, "%Y-%m-%d").date()
+                queryset = queryset.filter(created_at__date=creation_date)
+            except ValueError:
+                pass
+
         if self.action == "list":
             queryset = queryset.prefetch_related(
                 Prefetch(
