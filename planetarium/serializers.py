@@ -24,8 +24,17 @@ class ShowListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "title",
+            "image",
             "description",
             "themes",
+        )
+
+class ShowImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "image",
         )
 
 
@@ -67,6 +76,7 @@ class ShowRetrieveSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "title",
+            "image",
             "description",
             "themes",
             "future_sessions",
