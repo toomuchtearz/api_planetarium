@@ -2,7 +2,14 @@ from django.db import transaction
 from django.db.models import Prefetch
 from rest_framework import serializers
 
-from planetarium.models import Theme, Show, PlanetariumDome, Session, Order, Ticket
+from planetarium.models import (
+    Theme,
+    Show,
+    PlanetariumDome,
+    Session,
+    Order,
+    Ticket
+)
 
 
 class ShowCreateSerializer(serializers.ModelSerializer):
@@ -85,7 +92,11 @@ class ShowRetrieveSerializer(serializers.ModelSerializer):
 
 
 class ThemeRetrieveSerializer(serializers.ModelSerializer):
-    associated_shows = ThemeShowSerializer(many=True, read_only=True, source="shows")
+    associated_shows = ThemeShowSerializer(
+        many=True,
+        read_only=True,
+        source="shows",
+    )
 
     class Meta:
         model = Theme
@@ -123,11 +134,22 @@ class SessionRetrieveSerializer(serializers.ModelSerializer):
     show = ShowListSerializer(read_only=True)
     dome = DomeSerializer(read_only=True)
     seats_left = serializers.IntegerField()
-    taken_seats = SessionTicketSerializer(many=True, read_only=True, source="tickets")
+    taken_seats = SessionTicketSerializer(
+        many=True,
+        read_only=True,
+        source="tickets",
+    )
 
     class Meta:
         model = Session
-        fields = ("id", "show_time", "show", "dome", "seats_left", "taken_seats")
+        fields = (
+            "id",
+            "show_time",
+            "show",
+            "dome",
+            "seats_left",
+            "taken_seats",
+        )
 
 
 class SessionCreateSerializer(serializers.ModelSerializer):
@@ -221,7 +243,11 @@ class TicketListSerializer(serializers.ModelSerializer):
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):
-    tickets = TicketCreateSerializer(many=True, read_only=False, allow_empty=False)
+    tickets = TicketCreateSerializer(
+        many=True,
+        read_only=False,
+        allow_empty=False,
+    )
 
     class Meta:
         model = Order
@@ -237,7 +263,8 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             identifier = (ticket["session"].id, ticket["row"], ticket["seat"])
             if identifier in seat_set:
                 raise serializers.ValidationError(
-                    f"Duplicate ticket in order: Row {ticket['row']}, Seat {ticket['seat']}"
+                    f"Duplicate ticket in order: "
+                    f"Row {ticket['row']}, Seat {ticket['seat']}"
                 )
             seat_set.add(identifier)
 
@@ -248,7 +275,10 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             tickets_data = validated_data.pop("tickets")
             new_order = Order.objects.create(**validated_data)
             Ticket.objects.bulk_create(
-                [Ticket(order=new_order, **ticket_data) for ticket_data in tickets_data]
+                [
+                    Ticket(order=new_order, **ticket_data)
+                    for ticket_data in tickets_data
+                ]
             )
 
             return Order.objects.prefetch_related(

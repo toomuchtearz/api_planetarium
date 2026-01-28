@@ -11,7 +11,8 @@ from api_planetarium import settings
 def create_custom_path(instance, filename):
     _, extension = os.path.splitext(filename)
     return os.path.join(
-        "uploads/images/", f"{slugify(instance.title)}-{uuid.uuid4()}{extension}"
+        "uploads/images/",
+        f"{slugify(instance.title)}-{uuid.uuid4()}{extension}"
     )
 
 
@@ -66,7 +67,9 @@ class Session(models.Model):
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="orders"
     )
 
     class Meta:
@@ -80,9 +83,15 @@ class Ticket(models.Model):
     row = models.IntegerField()
     seat = models.IntegerField()
     session = models.ForeignKey(
-        Session, on_delete=models.CASCADE, related_name="tickets"
+        Session,
+        on_delete=models.CASCADE,
+        related_name="tickets"
     )
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="tickets",
+    )
 
     class Meta:
         constraints = [
@@ -104,9 +113,13 @@ class Ticket(models.Model):
         raised_error,
     ):
         if not (1 <= row <= num_rows):
-            raise raised_error({"row": f"row must be in range [1, {num_rows}]"})
+            raise raised_error(
+                {"row": f"row must be in range [1, {num_rows}]"}
+            )
         elif not (1 <= seat <= num_seats):
-            raise raised_error({"seat": f"seat must be in range [1, {num_seats}]"})
+            raise raised_error(
+                {"seat": f"seat must be in range [1, {num_seats}]"}
+            )
 
     def clean(self):
         self.validate_row_and_seat(

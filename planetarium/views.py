@@ -6,7 +6,15 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from planetarium.models import Theme, Show, PlanetariumDome, Session, Order, Ticket
+from planetarium.models import (
+    Theme,
+    Show,
+    PlanetariumDome,
+    Session,
+    Order,
+    Ticket
+)
+
 from planetarium.serializers import (
     ThemeSerializer,
     ShowListSerializer,
@@ -178,7 +186,11 @@ class SessionViewSet(viewsets.ModelViewSet):
                 .prefetch_related("show__themes")
                 .annotate(
                     seats_left=(
-                        (F("dome__rows") * F("dome__seats_in_row")) - Count("tickets")
+                        (
+                            F("dome__rows")
+                            * F("dome__seats_in_row")
+                        )
+                        - Count("tickets")
                     )
                 )
             )
@@ -198,7 +210,9 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         if creation_date_str:
             try:
-                creation_date = datetime.strptime(creation_date_str, "%Y-%m-%d").date()
+                creation_date = datetime.strptime(
+                    creation_date_str, "%Y-%m-%d"
+                ).date()
                 queryset = queryset.filter(created_at__date=creation_date)
             except ValueError:
                 pass
