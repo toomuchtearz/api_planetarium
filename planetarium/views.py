@@ -297,7 +297,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             except ValueError:
                 pass
 
-        if self.action == "list":
+        if self.action in ("list", "retrieve"):
             queryset = queryset.prefetch_related(
                 Prefetch(
                     "tickets",
