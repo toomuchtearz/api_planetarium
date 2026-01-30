@@ -2,8 +2,10 @@ from datetime import datetime
 
 from django.db.models import Prefetch, F, Count
 from django.utils import timezone
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -15,6 +17,7 @@ from planetarium.models import (
     Order,
     Ticket
 )
+from planetarium.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 from planetarium.serializers import (
     ThemeSerializer,
@@ -24,7 +27,7 @@ from planetarium.serializers import (
     SessionListSerializer,
     SessionRetrieveSerializer,
     OrderCreateSerializer,
-    OrderListSerializer,
+    OrderSerializer,
     ThemeRetrieveSerializer,
     ShowCreateSerializer,
     DomeRetrieveSerializer,
@@ -96,6 +99,20 @@ class ShowViewSet(viewsets.ModelViewSet):
 
         return queryset.distinct()
 
+    @extend_schema(
+        description="Upload an image for a specific show.",
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {
+                    "image": {
+                        "type": "string",
+                        "format": "binary",
+                    }
+                },
+            }
+        },
+    )
     @action(
         methods=["POST"],
         detail=True,
@@ -109,6 +126,25 @@ class ShowViewSet(viewsets.ModelViewSet):
 
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "title",
+                type=OpenApiTypes.STR,
+                description="Filter by show title (ex. ?title=abc)",
+            ),
+            OpenApiParameter(
+                "themes",
+                type=OpenApiTypes.INT,
+                many=True,
+                description="Filter by theme IDs (ex. ?themes=1,2)",
+                explode=False,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """Get list of shows."""
+        return super().list(request, *args, **kwargs)
 
 class PlanetariumDomeViewSet(viewsets.ModelViewSet):
     queryset = PlanetariumDome.objects.all()
@@ -141,6 +177,19 @@ class PlanetariumDomeViewSet(viewsets.ModelViewSet):
             serializer = DomeRetrieveSerializer
 
         return serializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "name",
+                type=OpenApiTypes.STR,
+                description="Filter by dome name (ex. ?title=alpha)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """Get list of domes."""
+        return super().list(request, *args, **kwargs)
 
 
 class SessionViewSet(viewsets.ModelViewSet):
@@ -198,10 +247,39 @@ class SessionViewSet(viewsets.ModelViewSet):
 
         return queryset.distinct()
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "date",
+                type=OpenApiTypes.DATE,
+                description="Filter by session date (ex. ?date=2022-12-12)",
+            ),
+
+            OpenApiParameter(
+                "shows",
+                type=OpenApiTypes.INT,
+                many=True,
+                description="Filter by show IDs (ex. ?shows=1,2)",
+                explode=False,
+            ),
+
+            OpenApiParameter(
+                "domes",
+                type=OpenApiTypes.INT,
+                many=True,
+                description="Filter by dome IDs (ex. ?domes=1,2)",
+                explode=False,
+            )
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """Get list of sessions."""
+        return super().list(request, *args, **kwargs)
+
 
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all()
-    serializer_class = OrderListSerializer
+    serializer_class = OrderSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
@@ -239,3 +317,19 @@ class OrderViewSet(viewsets.ModelViewSet):
             serializer = OrderCreateSerializer
 
         return serializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "creation_date",
+                type=OpenApiTypes.DATE,
+                description=(
+                        "Filter by order creation date "
+                        "(ex. ?creation_date=2022-12-12)"
+                ),
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """Get list of orders."""
+        return super().list(request, *args, **kwargs)
