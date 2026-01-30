@@ -38,10 +38,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "planetarium",
     "user",
     "rest_framework",
     "debug_toolbar",
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -146,10 +148,32 @@ REST_FRAMEWORK = {
         "user": "1000/day",
     },
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
-    "PAGE_SIZE": 10
+    "PAGE_SIZE": 10,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Planetarium API',
+    'DESCRIPTION': (
+        "A comprehensive API for managing planetarium operations, including shows, "
+        "sessions, and ticket bookings.\n\n"
+        "**Key Features:**\n"
+        "- **Shows & Sessions:** Manage movie screenings and schedule sessions in specific domes.\n"
+        "- **Seat Management:** Real-time capacity calculation and validation to prevent double-booking.\n"
+        "- **Orders & Tickets:** Atomic transaction support for purchasing tickets.\n"
+        "- **Filtering:** Advanced filtering by date, title, and themes.\n"
+        "- **Authentication:** JWT-based authentication with role-based access control (Admin/User)."
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "defaultModelRendering": "model",
+        "defaultModelsExpandDepth": 2,
+        "defaultModelExpandDepth": 2,
+    }
+}
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
