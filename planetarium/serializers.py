@@ -291,7 +291,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             ).get(pk=new_order.pk)
 
 
-class OrderListSerializer(serializers.ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
     tickets = TicketListSerializer(many=True, read_only=True)
 
     class Meta:
