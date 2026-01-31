@@ -89,7 +89,8 @@ docker-compose exec planetarium python manage.py test
 The API is fully documented using Swagger/OpenAPI.
 
 **Endpoints Overview:**
-![API Screenshot](<img width="1512" height="1078" alt="image" src="https://github.com/user-attachments/assets/8335aaab-9f1c-4446-9356-76d6a6790787" />)
+<img width="1512" height="1076" alt="image" src="https://github.com/user-attachments/assets/888dada5-ceae-428d-8dfb-82ec280e2aac" />
+
 
 1. Run the project. 
 2. Go to `/api/doc/swagger/`.
