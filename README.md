@@ -88,13 +88,17 @@ docker-compose exec planetarium python manage.py test
 ## API Documentation
 The API is fully documented using Swagger/OpenAPI.
 
-Run the project. Go to `/api/doc/swagger/`.
+**Endpoints Overview:**
+![API Screenshot](link_to_your_planetarium_endpoints_image)
+
+1. Run the project. 
+2. Go to `/api/doc/swagger/`.
 
 Authentication:
 
-Click the **Authorize** button.
-Register a user or get a token via `/api/user/token/`.
-Enter your token (e.g., `<your_token>`).
+1. Click the **Authorize** button.
+2. Register a user or get a token via `/api/user/token/`.
+3. Enter your token (e.g., `<your_token>`).
 
 ---
 
