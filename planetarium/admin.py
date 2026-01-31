@@ -30,10 +30,19 @@ class PlanetariumDomeAdmin(admin.ModelAdmin):
 class SessionDomeAdmin(admin.ModelAdmin):
     pass
 
-@admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
-    pass
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
     pass
+
+
+class TicketInline(admin.TabularInline):
+    model = Ticket
+    extra = 1
+
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    inlines = (TicketInline,)
+    list_display = ("id", "user", "created_at")
+    list_filter = ("created_at", "user")
