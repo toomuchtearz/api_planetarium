@@ -29,8 +29,8 @@ This is the recommended way to run the project.
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/toomuchtearz/planetarium-api.git
-cd planetarium-api
+git clone https://github.com/toomuchtearz/api_planetarium.git
+cd api_planetarium
 ```
 
 ### 2. Configure Environment
@@ -55,7 +55,18 @@ To access the Admin features, create a superuser inside the running container:
 docker-compose exec planetarium python manage.py createsuperuser
 ```
 
-### 5. Access the App
+### 5. Steps to get the access token:
+
+Go to -> http://127.0.0.1:8001/api/token/
+1. Enter email, password and send a POST request
+2. Copy the access token
+3. Add it to headers with the 'Bearer' prefix 
+4. Example: "Authorization: Bearer <token>"
+
+
+### 6. Access the App
+
+Once you have your JWT token, you can access API:
 
 API Root: http://127.0.0.1:8001/api/planetarium/
 
