@@ -5,7 +5,7 @@ from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, status
-from rest_framework.decorators import action, permission_classes
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -17,7 +17,6 @@ from planetarium.models import (
     Order,
     Ticket
 )
-from planetarium.permissions import IsAdminOrIfAuthenticatedReadOnly
 
 from planetarium.serializers import (
     ThemeSerializer,
