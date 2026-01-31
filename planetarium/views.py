@@ -4,7 +4,7 @@ from django.db.models import Prefetch, F, Count
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -42,7 +42,16 @@ def str_ids_to_int(str_ids):
         return []
 
 
-class ThemeViewSet(viewsets.ModelViewSet):
+class ListCreateRetrieveViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
+    ...
+
+
+class ThemeViewSet(ListCreateRetrieveViewSet):
     queryset = Theme.objects.all()
     serializer_class = ThemeSerializer
 
@@ -54,7 +63,7 @@ class ThemeViewSet(viewsets.ModelViewSet):
         return serializer
 
 
-class ShowViewSet(viewsets.ModelViewSet):
+class ShowViewSet(ListCreateRetrieveViewSet):
     queryset = Show.objects.all()
     serializer_class = ShowCreateSerializer
 
@@ -145,7 +154,7 @@ class ShowViewSet(viewsets.ModelViewSet):
         """Get list of shows."""
         return super().list(request, *args, **kwargs)
 
-class PlanetariumDomeViewSet(viewsets.ModelViewSet):
+class PlanetariumDomeViewSet(ListCreateRetrieveViewSet):
     queryset = PlanetariumDome.objects.all()
     serializer_class = DomeSerializer
 
@@ -276,7 +285,11 @@ class SessionViewSet(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
 
-class OrderViewSet(viewsets.ModelViewSet):
+class OrderViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = (IsAuthenticated,)
