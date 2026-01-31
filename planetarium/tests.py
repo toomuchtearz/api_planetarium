@@ -108,11 +108,14 @@ class AuthenticatedUserShowApiTests(TestCase):
 
         res = self.client.get(SHOW_URL)
 
-        shows = Show.objects.all()
+        shows = Show.objects.all().order_by("id")
         serializer = ShowListSerializer(shows, many=True)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(res.data["results"], serializer.data)
+        self.assertEqual(
+            sorted(res.data["results"], key=lambda x: x["id"]),
+            serializer.data
+        )
 
     def test_filter_shows_by_themes(self):
         theme1 = sample_theme(name="Space")
