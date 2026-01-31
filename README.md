@@ -29,7 +29,7 @@ This is the recommended way to run the project.
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/planetarium-api.git
+git clone https://github.com/toomuchtearz/planetarium-api.git
 cd planetarium-api
 ```
 
