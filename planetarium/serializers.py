@@ -1,0 +1,303 @@
+from django.db import transaction
+from django.db.models import Prefetch
+from rest_framework import serializers
+
+from planetarium.models import (
+    Theme,
+    Show,
+    PlanetariumDome,
+    Session,
+    Order,
+    Ticket
+)
+
+
+class ShowCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "title",
+            "description",
+            "themes",
+        )
+
+
+class ShowListSerializer(serializers.ModelSerializer):
+    themes = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "title",
+            "image",
+            "description",
+            "themes",
+        )
+
+
+class ShowImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "image",
+        )
+
+
+class ThemeShowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "title",
+            "description",
+        )
+
+
+class ShowSessionSerializer(serializers.ModelSerializer):
+    dome_name = serializers.StringRelatedField(source="dome")
+    dome_capacity = serializers.IntegerField(source="dome.capacity")
+
+    class Meta:
+        model = Session
+        fields = ("id", "dome_name", "dome_capacity", "show_time")
+
+
+class ThemeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Theme
+        fields = (
+            "id",
+            "name",
+        )
+
+
+class ShowRetrieveSerializer(serializers.ModelSerializer):
+    themes = ThemeSerializer(many=True, read_only=True)
+    future_sessions = ShowSessionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Show
+        fields = (
+            "id",
+            "title",
+            "image",
+            "description",
+            "themes",
+            "future_sessions",
+        )
+
+
+class ThemeRetrieveSerializer(serializers.ModelSerializer):
+    associated_shows = ThemeShowSerializer(
+        many=True,
+        read_only=True,
+        source="shows",
+    )
+
+    class Meta:
+        model = Theme
+        fields = (
+            "id",
+            "name",
+            "associated_shows",
+        )
+
+
+class DomeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PlanetariumDome
+        fields = (
+            "id",
+            "name",
+            "rows",
+            "seats_in_row",
+            "capacity",
+        )
+
+
+class SessionTicketSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Ticket
+        fields = (
+            "row",
+            "seat",
+        )
+
+
+class SessionRetrieveSerializer(serializers.ModelSerializer):
+    show = ShowListSerializer(read_only=True)
+    dome = DomeSerializer(read_only=True)
+    seats_left = serializers.IntegerField()
+    taken_seats = SessionTicketSerializer(
+        many=True,
+        read_only=True,
+        source="tickets",
+    )
+
+    class Meta:
+        model = Session
+        fields = (
+            "id",
+            "show_time",
+            "show",
+            "dome",
+            "seats_left",
+            "taken_seats",
+        )
+
+
+class SessionCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Session
+        fields = (
+            "id",
+            "show",
+            "dome",
+            "show_time",
+        )
+
+
+class SessionListSerializer(serializers.ModelSerializer):
+    show_title = serializers.StringRelatedField(source="show")
+    dome_name = serializers.StringRelatedField(source="dome")
+    dome_capacity = serializers.IntegerField(source="dome.capacity")
+    seats_left = serializers.IntegerField()
+
+    class Meta:
+        model = Session
+        fields = (
+            "id",
+            "show_title",
+            "dome_name",
+            "dome_capacity",
+            "seats_left",
+            "show_time",
+        )
+
+
+class DomeSessionSerializer(serializers.ModelSerializer):
+    show_title = serializers.StringRelatedField(source="show.title")
+
+    class Meta:
+        model = Session
+        fields = ("id", "show_title", "show_time")
+
+
+class DomeRetrieveSerializer(serializers.ModelSerializer):
+    future_sessions = DomeSessionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = PlanetariumDome
+        fields = (
+            "id",
+            "name",
+            "rows",
+            "seats_in_row",
+            "capacity",
+            "future_sessions",
+        )
+
+
+class TicketCreateSerializer(serializers.ModelSerializer):
+    session = serializers.PrimaryKeyRelatedField(
+        queryset=Session.objects.select_related("dome")
+    )
+
+    class Meta:
+        model = Ticket
+        fields = ("row", "seat", "session")
+
+    def validate(self, attrs):
+        Ticket.validate_row_and_seat(
+            row=attrs["row"],
+            num_rows=attrs["session"].dome.rows,
+            seat=attrs["seat"],
+            num_seats=attrs["session"].dome.seats_in_row,
+            raised_error=serializers.ValidationError,
+        )
+
+        return super().validate(attrs)
+
+
+class TicketListSerializer(serializers.ModelSerializer):
+    show_title = serializers.StringRelatedField(source="session.show")
+    dome = serializers.StringRelatedField(source="session.dome")
+    show_time = serializers.DateTimeField(source="session.show_time")
+
+    class Meta:
+        model = Ticket
+        fields = (
+            "row",
+            "seat",
+            "show_title",
+            "dome",
+            "show_time",
+        )
+
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    tickets = TicketCreateSerializer(
+        many=True,
+        read_only=False,
+        allow_empty=False,
+    )
+
+    class Meta:
+        model = Order
+        fields = (
+            "id",
+            "tickets",
+            "created_at",
+        )
+
+    def validate(self, attrs):
+        seat_set = set()
+        for ticket in attrs["tickets"]:
+            identifier = (ticket["session"].id, ticket["row"], ticket["seat"])
+            if identifier in seat_set:
+                raise serializers.ValidationError(
+                    f"Duplicate ticket in order: "
+                    f"Row {ticket['row']}, Seat {ticket['seat']}"
+                )
+            seat_set.add(identifier)
+
+        return super().validate(attrs)
+
+    def create(self, validated_data):
+        with transaction.atomic():
+            tickets_data = validated_data.pop("tickets")
+            new_order = Order.objects.create(**validated_data)
+            Ticket.objects.bulk_create(
+                [
+                    Ticket(order=new_order, **ticket_data)
+                    for ticket_data in tickets_data
+                ]
+            )
+
+            return Order.objects.prefetch_related(
+                Prefetch(
+                    "tickets",
+                    queryset=Ticket.objects.select_related(
+                        "session__show", "session__dome"
+                    ),
+                )
+            ).get(pk=new_order.pk)
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    tickets = TicketListSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Order
+        fields = (
+            "id",
+            "tickets",
+            "created_at",
+        )
